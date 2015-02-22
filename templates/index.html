@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>Song list!</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <style>
+    body {
+        font-family:    arial,sans-serif;
+    }
+    table, td {
+        border:         1px solid black;
+        table-layout:   fixed;
+        word-wrap:      break-word;
+        width:          100%;
+    }
+
+    input[type="text"] {
+        width: 100%; 
+        box-sizing:         border-box;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing:    border-box;
+    }
+    </style>
+</head>
+
+<body>
+    <h1>Song List</h1>
+	<table>
+        <tr>
+            <form action="/add" method="POST">
+            <input type="hidden" name="from" value="webpage">
+            <td><input type="text" name="url" placeholder="Song URL" required></td>
+            <td><input type="text" name="title" maxlength="250" placeholder="Artist and song name" required></td>
+            <td><input type="text" name="submitter" placeholder="Name of submitter" maxlength="250"></td>
+            <td><input type="text" name="other" placeholder="Other info (genre, etc)" maxlength="250"></td>
+            <td><input type="submit" name="submit" value="Submit"></td>
+            </form>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td><b>URL</b></td>
+            <td><b>Artist and name</b></td>
+            <td><b>Submitted by</b></td>
+            <td><b>Other info</b></td>
+            <td><b>Time submitted</b></td>
+            <td></td>
+        </tr>
+        {% for song in songlist[::-1] %}
+        <form action="/delete" method="POST">
+            <input type="hidden" name="song_id" value="{{ song['id'] }}">
+            <input type="hidden" name="from" value="webpage">
+            <tr>
+                <td><a href="{{ song['url'] }}">{{ song['url'] }}</a></td>
+                <td>{{ song['title'] }}</td>
+                <td>{{ song['submitter'] }}</td>
+                <td>{{ song['other'] }}</td>
+                <td>{{ song['time'] }}</td>
+                <td><input type="submit" value="Remove"></td>
+            </tr>
+        </form>
+        {% endfor %}
+    </table>
+</body>
+
+</html>
