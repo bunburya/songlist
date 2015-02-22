@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from time import strftime
+from datetime import datetime
 from json import dumps
 from random import choice
 from flask import (Flask, render_template, request, flash, redirect,
@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def main():
-    return render_template('index.html', songlist=songlist.songlist)
+    return render_template('index.html', songlist=songlist)
     
 @app.route('/add', methods=['POST'])
 def add_song():
@@ -26,7 +26,7 @@ def add_song():
         'title':        request.form.get('title', None),
         'other':        request.form.get('other', None), 
         'submitter':    request.form.get('submitter'),
-        'time':         strftime('%d/%m/%Y, %H:%M:%S (%Z)')
+        'time':         tuple(datetime.utcnow().timetuple())
         }
     if not (song['url'].startswith('http://') or song['url'].startswith('https://')):
         song['url'] = 'http://' + song['url']

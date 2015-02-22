@@ -48,7 +48,7 @@
             <td><b>Time submitted</b></td>
             <td></td>
         </tr>
-        {% for song in songlist[::-1] %}
+        {% for song in songlist.songlist[::-1] %}
         <form action="/delete" method="POST">
             <input type="hidden" name="song_id" value="{{ song['id'] }}">
             <input type="hidden" name="from" value="webpage">
@@ -57,7 +57,7 @@
                 <td>{{ song['title'] }}</td>
                 <td>{{ song['submitter'] }}</td>
                 <td>{{ song['other'] }}</td>
-                <td>{{ song['time'] }}</td>
+                <td>{{ songlist.timestring(song['time']) }}</td>
                 <td><input type="submit" value="Remove"></td>
             </tr>
         </form>

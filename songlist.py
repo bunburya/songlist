@@ -2,6 +2,8 @@ from json import load, dump
 from os.path import exists, dirname
 from os import makedirs
 
+from time import struct_time, strftime
+
 class SongList:
     
     """This class basically provides a clean interface for accessing and
@@ -55,4 +57,11 @@ class SongList:
         # easy.
         self._id += 1
         return self._id
+    
+    def timestring(self, ttuple):
+        """Take the tuple stored in the JSON file and turn it into a
+        human readable string.
+        """
+        year, month, day, hour, mins, secs, wday, yday, isdst = ttuple
+        return strftime('%a %d/%m/%Y at %H:%M:%S %Z')
         
