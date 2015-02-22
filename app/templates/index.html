@@ -5,31 +5,41 @@
 <head>
 	<title>Song list!</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-    <style>
-    body {
-        font-family:    arial,sans-serif;
-    }
-    table, td {
-        border:         1px solid black;
-        table-layout:   fixed;
-        word-wrap:      break-word;
-        width:          100%;
-    }
+	<style>
+    	body {
+    		font-family: monospace;
+    		margin: 5%;
+    		background: rgb(130, 170, 204) none repeat scroll 0% 0%;
+    		color: rgb(7, 3, 66);
+	}
 
-    input[type="text"] {
-        width: 100%; 
-        box-sizing:         border-box;
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing:    border-box;
-    }
-    </style>
+	a {
+    		color: rgb(147, 69, 69);
+	}
+
+	table, td {
+    		table-layout: fixed;
+    		word-wrap: break-word;
+    		width: 100%;
+    		padding: 10px;
+    		background: rgba(68, 18, 18, 0.08) none repeat scroll 0% 0%;
+	}
+
+	input[type="text"] {
+    		width: 100%; 
+    		box-sizing: border-box;
+    		-webkit-box-sizing: border-box;
+    		-moz-box-sizing: border-box;
+	}
+	</style>
 </head>
 
 <body>
     <h1>Song List</h1>
+    (<a href="/songlist/about">About</a>)
 	<table>
         <tr>
-            <form action="/add" method="POST">
+            <form action="/songlist/add" method="POST">
             <input type="hidden" name="from" value="webpage">
             <td><input type="text" name="url" placeholder="Song URL" required></td>
             <td><input type="text" name="title" maxlength="250" placeholder="Artist and song name" required></td>
@@ -49,7 +59,7 @@
             <td></td>
         </tr>
         {% for song in songlist.songlist[::-1] %}
-        <form action="/delete" method="POST">
+        <form action="/songlist/delete" method="POST">
             <input type="hidden" name="song_id" value="{{ song['id'] }}">
             <input type="hidden" name="from" value="webpage">
             <tr>

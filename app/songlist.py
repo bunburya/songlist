@@ -1,24 +1,25 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+from sys import path
+path.append('/usr/local/lib/python3.4/dist-packages')
 
+from os.path import dirname, join
 from datetime import datetime
 from json import dumps
 from random import choice
 from flask import (Flask, render_template, request, flash, redirect,
                     url_for)
-from songlist import SongList
+from .songhandler import SongList
 
-SONGFILE = 'songs.json'
+SONGFILE = join(dirname(__file__), 'songs.json')
 
 songlist = SongList(SONGFILE)
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 
-@app.route('/')
+@app.route('/songlist/')
 def main():
     return render_template('index.html', songlist=songlist)
     
-@app.route('/add', methods=['POST'])
+@app.route('/songlist/add', methods=['POST'])
 def add_song():
     song = {
         'id':           songlist.new_id(),
@@ -32,21 +33,21 @@ def add_song():
         song['url'] = 'http://' + song['url']
     songlist.add_song(song)
     if request.form.get('from') == 'webpage':
-        return redirect('/')
+        return redirect('/songlist')
     else:
         return str(song['id'])
 
-@app.route('/delete', methods=['POST'])
+@app.route('/songlist/delete', methods=['POST'])
 def del_song():
     song_id = int(request.form.get('song_id'))
     print(song_id)
     songlist.remove_song(song_id)
     if request.form.get('from') == 'webpage':
-        return redirect('/')
+        return redirect('/songlist')
     else:
         return '1'
 
-@app.route('/random', methods=['GET', 'POST'])
+@app.route('/songlist/random', methods=['GET', 'POST'])
 def get_song():
     uname = request.form.get('submitter')
     if uname:
@@ -58,8 +59,12 @@ def get_song():
     else:
         return '0'
 
-if __name__ == '__main__':
-    from sys import argv
-    if '--debug' in argv:
-        app.debug = True
-    app.run()
+@app.route('/songlist/about')
+def about():
+    return app.send_static_file('about.html')
+
+#if __name__ == '__main__':
+#    from sys import argv
+#    if '--debug' in argv:
+#        app.debug = True
+#    app.run(port=7664)

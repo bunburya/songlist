@@ -63,5 +63,5 @@ class SongList:
         human readable string.
         """
         year, month, day, hour, mins, secs, wday, yday, isdst = ttuple
-        return strftime('%a %d/%m/%Y at %H:%M:%S %Z')
+        return strftime('%a %d/%m/%Y at %H:%M:%S %Z', struct_time(ttuple))
         
