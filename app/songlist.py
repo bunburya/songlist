@@ -59,10 +59,6 @@ def get_song():
     else:
         return '0'
 
-@app.route('/songlist/about')
-def about():
-    return app.send_static_file('about.html')
-
 #if __name__ == '__main__':
 #    from sys import argv
 #    if '--debug' in argv:
