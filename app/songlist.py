@@ -65,8 +65,3 @@ def get_feed():
     feed = gen_feed(request.url, request.url_root, songlist)
     return feed.get_response()
 
-#if __name__ == '__main__':
-#    from sys import argv
-#    if '--debug' in argv:
-#        app.debug = True
-#    app.run(port=7664)

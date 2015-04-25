@@ -23,7 +23,7 @@ class SongList:
     def __iter__(self):
         """Iterate backwards through the songlist (most to least recent).
         """
-        self._index = len(songlist) - 1
+        self._index = len(self.songlist) - 1
         return self
     
     def __next__(self):
@@ -53,7 +53,7 @@ class SongList:
     def add_song(self, song, rm_old=True):
         if rm_old:
             old_ids = []
-            for s in songlist:
+            for s in self.songlist:
                 if s['url'] == song['url']:
                     old_ids.append(s['id'])
             for _id in old_ids:
