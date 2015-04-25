@@ -1,3 +1,1 @@
-- Clean up nginx integration; try set root to /website/songlist in the location section, so we can route from "/" etc.  Then try get serving static files so we can use external stylesheets.
-
-- RSS support.
+- Clean up nginx integration; try set root to /website/songlist in the location section, so we can route from "/" etc.

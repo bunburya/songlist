@@ -6,11 +6,15 @@
 	<title>Song list!</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 	<link rel="stylesheet" type="text/css" href="/songlist/style.css">
+    <link href="{{ url_for('recent_feed') }}"
+      rel="alternate"
+      title="Songlist" 
+      type="application/atom+xml">
 </head>
 
 <body>
     <h1>Song List</h1>
-    (<a href="/songlist/about.html">About</a>)
+    (<a href="/songlist/about.html">about</a>; <a href="/songlist/feed.atom">atom feed</a>)
 	<table>
         <tr>
             <form action="/songlist/add" method="POST">
@@ -32,7 +36,7 @@
             <td><b>Time submitted</b></td>
             <td></td>
         </tr>
-        {% for song in songlist.songlist[::-1] %}
+        {% for song in songlist %}
         <form action="/songlist/delete" method="POST">
             <input type="hidden" name="song_id" value="{{ song['id'] }}">
             <input type="hidden" name="from" value="webpage">

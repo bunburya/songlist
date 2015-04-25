@@ -8,6 +8,7 @@ from random import choice
 from flask import (Flask, render_template, request, flash, redirect,
                     url_for)
 from .songhandler import SongList
+from .atom import gen_feed
 
 SONGFILE = join(dirname(__file__), 'songs.json')
 
@@ -31,7 +32,7 @@ def add_song():
         }
     if not (song['url'].startswith('http://') or song['url'].startswith('https://')):
         song['url'] = 'http://' + song['url']
-    songlist.add_song(song)
+    songlist.add_song(song, rm_old=True)
     if request.form.get('from') == 'webpage':
         return redirect('/songlist')
     else:
@@ -58,6 +59,11 @@ def get_song():
         return dumps(choice(pool))
     else:
         return '0'
+
+@app.route('/songlist/feed.atom')
+def get_feed():
+    feed = gen_feed(request.url, request.url_root, songlist)
+    return feed.get_response()
 
 #if __name__ == '__main__':
 #    from sys import argv

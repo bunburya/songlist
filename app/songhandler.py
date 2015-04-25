@@ -20,6 +20,19 @@ class SongList:
             self.songlist = []
             self.save_list()
     
+    def __iter__(self):
+        """Iterate backwards through the songlist (most to least recent).
+        """
+        self._index = len(songlist) - 1
+        return self
+    
+    def __next__(self):
+        if self._index < 0:
+            raise StopIteration
+        song = self.songlist[self._index]
+        self._index -= 1
+        return song
+    
     def save_list(self):
         fdir = dirname(self.songfile)
         if fdir and not exists(fdir):
@@ -37,7 +50,14 @@ class SongList:
                 self.songlist = []
                 self.save_list()
                 
-    def add_song(self, song):
+    def add_song(self, song, rm_old=True):
+        if rm_old:
+            old_ids = []
+            for s in songlist:
+                if s['url'] == song['url']:
+                    old_ids.append(s['id'])
+            for _id in old_ids:
+                self.remove_song(_id)
         self.songlist.append(song)
         self.save_list()
     
@@ -62,6 +82,4 @@ class SongList:
         """Take the tuple stored in the JSON file and turn it into a
         human readable string.
         """
-        year, month, day, hour, mins, secs, wday, yday, isdst = ttuple
         return strftime('%a %d/%m/%Y at %H:%M:%S %Z', struct_time(ttuple))
-        
