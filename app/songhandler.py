@@ -38,7 +38,7 @@ class SongList:
         if fdir and not exists(fdir):
             makedirs(fdir)
         with open(self.songfile, 'w') as f:
-            dump([self.songlist, self._id], f)
+            dump([self.songlist, self._id], f, indent=4)
     
     def load_list(self):
         with open(self.songfile, 'r') as f:

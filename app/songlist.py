@@ -33,7 +33,7 @@ def add_song():
         'id':           songlist.new_id(),
         'url':          url,
         'domain':       domain,
-        'sanitised':    quote_plus(url),
+        'url_escaped':  quote_plus(url),
         'title':        request.form.get('title', None),
         'other':        request.form.get('other', None), 
         'submitter':    request.form.get('submitter'),
