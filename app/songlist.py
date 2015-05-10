@@ -5,6 +5,7 @@ from os.path import dirname, join
 from datetime import datetime
 from json import dumps
 from random import choice
+from urllib.parse import quote_plus, urlparse
 from flask import (Flask, render_template, request, flash, redirect,
                     url_for)
 from .songhandler import SongList
@@ -22,9 +23,17 @@ def main():
     
 @app.route('/songlist/add', methods=['POST'])
 def add_song():
+    url = request.form.get('url', None)
+    domain = urlparse(url).netloc
+    # Remove trailing port number, if present
+    colon_i = domain.find(':')
+    if colon_i >= 0:
+        domain = domain[:colon_i]
     song = {
         'id':           songlist.new_id(),
-        'url':          request.form.get('url', None),
+        'url':          url,
+        'domain':       domain,
+        'sanitised':    quote_plus(url),
         'title':        request.form.get('title', None),
         'other':        request.form.get('other', None), 
         'submitter':    request.form.get('submitter'),
