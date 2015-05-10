@@ -1,1 +1,13 @@
-- Clean up nginx integration; try set root to /website/songlist in the location section, so we can route from "/" etc.
+- Clean up nginx integration; try set root to /website/songlist in the location
+  section, so we can route from "/" etc.
+
+- Continuous play feature.
+
+  - Expand API to handle search requests for songs and submitters.
+
+  - JavaScript web page that queries API for song data, sorts it by service,
+    and embeds player as appropriate.
+
+  - Should have shuffle / repeat all as well as striaghtforward play capabilities.
+
+  - Should have ability to select which services and which submitters to show.
