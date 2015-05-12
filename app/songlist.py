@@ -74,18 +74,17 @@ def get_song():
 def get_feed():
     feed = gen_feed(request.url, request.url_root, songlist)
     return feed.get_response()
-    
+ 
 @app.route('/songlist/search', methods=['GET'])
 def search():
-    args = dict(request.args)
+    args = request.args.copy()
     targ = args.pop('target', None)
-    
     if targ == 'songs':
         return dumps(get_songs(songlist,
-                    **{kw: val.split(';') for kw, val in args}))
+                    **{kw: val.split(';') for kw, val in args.items()}))
     elif targ == 'data':
-        return dumps(get_data(songslist,
-                                *args.get('data', '').split(';'))
+        return dumps(get_data(songlist,
+                                *args.get('data', '').split(';')))
     else:
         return '0'
 

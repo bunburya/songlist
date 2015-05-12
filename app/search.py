@@ -9,7 +9,8 @@ def get_data(songlist, *keywords):
                 data[kw].add(song[kw])
             except KeyError:
                 continue
-    return data
+    # Convert sets back to lists, so they can be jsonified
+    return {k: list(v) for k, v in data.items()}
 
 def get_songs(songlist, **kwargs):
     """Takes a number of arguments in the form `kw=[opt1, opt2 ...]`.
