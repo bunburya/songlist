@@ -1,11 +1,15 @@
-def get_data(songlist, keyword):
+def get_data(songlist, *keywords):
     """Return a set of all values associated with the given keyword in
     any song entry.
     """
-    s = set()
+    data = {kw: set() for kw in keywords}
     for song in songlist:
-        s.add(song[keyword])
-    return s
+        for kw in keywords:
+            try:
+                data[kw].add(song[kw])
+            except KeyError:
+                continue
+    return data
 
 def get_songs(songlist, **kwargs):
     """Takes a number of arguments in the form `kw=[opt1, opt2 ...]`.

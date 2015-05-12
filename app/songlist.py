@@ -10,6 +10,7 @@ from flask import (Flask, render_template, request, flash, redirect,
                     url_for)
 from .songhandler import SongList
 from .atom import gen_feed
+from .search import get_data, get_songs
 
 SONGFILE = join(dirname(__file__), 'songs.json')
 
@@ -73,4 +74,18 @@ def get_song():
 def get_feed():
     feed = gen_feed(request.url, request.url_root, songlist)
     return feed.get_response()
+    
+@app.route('/songlist/search', methods=['GET'])
+def search():
+    args = dict(request.args)
+    targ = args.pop('target', None)
+    
+    if targ == 'songs':
+        return dumps(get_songs(songlist,
+                    **{kw: val.split(';') for kw, val in args}))
+    elif targ == 'data':
+        return dumps(get_data(songslist,
+                                *args.get('data', '').split(';'))
+    else:
+        return '0'
 
