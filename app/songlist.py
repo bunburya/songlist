@@ -77,6 +77,11 @@ def get_feed():
  
 @app.route('/songlist/search', methods=['GET'])
 def search():
+    # NOTE: Using semicolons to separate params in GET queries
+    # works for present purposes because the params we're using
+    # (domain and submitter) are unlikely to contain semicolons.
+    # It isn't really a long-term sustainable solution, unless
+    # all params are escaped first.
     args = request.args.copy()
     targ = args.pop('target', None)
     if targ == 'songs':
