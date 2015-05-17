@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>Play</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="/songlist/style.css">
+    <script src="http://connect.soundcloud.com/sdk.js"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script language="javascript">
+        var songlist = {
+            
+            baseURL: 'http://bunburya.eu/songlist';
+            
+            serviceDomains: {
+                'youtube':      ['youtube.com', 'www.youtube.com',
+                                'youtu.be', 'www.youtu.be'],
+                'soundcloud':   ['soundcloud.com', 'www.soundcloud.com']
+            },
+            
+            players: {},
+            
+            getService: function(domain) {
+                for (serv in songlist.serviceDomains) {
+                    if (songlist.serviceDomains.hasOwnProperty(serv)) {
+                        if (songlist.serviceDomains[serv].indexOf(domain) != -1) {
+                            return domain;
+                        }
+                    }
+                }
+                return null;
+            },
+            
+            getChecked: function(name) {
+                var checked = new Array();
+                var boxes = document.getElementsByName(name);
+                for (var i = 0; i < boxes.length; i++) {
+                    var b = boxes[i];
+                    if (b.checked) {
+                        checked.push(b.value);
+                    }
+                }
+                return checked;
+            },
+            
+            getURL: function(url) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.open("GET", url, true);
+                xmlhttp.send();
+                return xmlhttp.responseText;
+            },
+            
+            getQueryString: function(params) {
+                var queries = new Array();
+                for (var key in params) {
+                    queries.push(key + '=' + params[key].join(';'));
+                }
+                return queries.join('+');
+            },
+            
+            getSCPlayableURL: function(url) {
+                return SC.get('/resolve/?url=' + url).uri;
+            }
+            
+            loadSCPlayer: function(url) {
+                scUrl = songlist.getSCPlayableURL(url);
+                scWidget = songlist.players.soundcloud;
+                if (scWidget) {
+                    scWidget.load(scUrl);
+                } else {
+                    iframe = document.createElement('iframe');
+                    document.getElementById('player').appendChild(iframe);
+                    scWidget = SC.Widget(iframe);
+                    songlist.players.soundcloud = scWidget;
+                }
+                scWidget.play();
+            },
+            
+            getPlaylist: function(services, submitters) {
+                if (songlist.baseURL.slice(-1) == '/') {
+                    var url = songlist.baseURL + 'search?format=json';
+                } else {
+                    var url = songlist.baseURL + '/search?format=json';
+                }
+                if (services.length) {
+                    var domains = new Array();
+                    for (var i = 0; i < services.length; i++) {
+                        domains.concat(songlist.domains[services[i]]);
+                    }
+                    url += '&domains=' + domains.join(';');
+                }
+                if (submitters.length) {
+                    url += '&submitters=' + submitters.join(';');
+                }
+                var playlist = songlist.getURL(url);
+                return playlist;
+            },
+            
+            playSong: function(song) {
+                var service = songlist.getService(song.domain);
+                if (service == 'soundcloud') {
+                    songlist.loadSCPlayer(song.url);
+                }
+            },
+            
+            load: function() {
+                var services = songlist.getChecked('services');
+                var submitters = songlist.getChecked('submitters');
+                var playlist = songlist.getPlaylist(services, submitters);
+            }
+        
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Play the songlist</h1>
+    <table>
+        <tr>
+            <h2>Play songs submitted by:</h2>
+            {% for s in submitters %}
+            <input type="checkbox" name="submitters" value="{{ s }}" checked> {{ s }}
+            {% endfor %}
+        </tr>
+        <tr>
+            <h2>Streaming services to play:</h2>
+            <input type="checkbox" name="services" value="youtube" checked> YouTube
+            <input type="checkbox" name="services" value="soundcloud" checked> Soundcloud
+        </tr>
+        <tr>
+            <button onclick="playlist.load()">Load</button>
+            <button onclick="playlist.play()">Play</button>
+            <button onclick="playlist.stop()">Stop</button>
+            <button onclick="playlist.prev()">Prev</button>
+            <button onclick="playlist.next()">Next</button>
+        </tr>
+        <tr id="player">
+            <!--player to be inserted here by javascript-->
+        </tr>
+    
+    </table>
+    
+</body>
+
+</html>
