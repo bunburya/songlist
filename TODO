@@ -12,3 +12,5 @@
 
 - Find a way to get debugging working with uwsgi, or replicate the app on
   laptop without nginx / uwsgi.
+
+- Autorun via Upstart.

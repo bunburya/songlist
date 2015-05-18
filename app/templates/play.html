@@ -9,9 +9,11 @@
     <script src="http://connect.soundcloud.com/sdk.js"></script>
     <script src="https://w.soundcloud.com/player/api.js"></script>
     <script language="javascript">
+        SC.initialize({ client_id: "77e325396300c9b6d63be0cbc005bb72" });
+
         var songlist = {
             
-            baseURL: 'http://bunburya.eu/songlist';
+            baseURL: 'http://bunburya.eu/songlist',
             
             serviceDomains: {
                 'youtube':      ['youtube.com', 'www.youtube.com',
@@ -25,7 +27,7 @@
                 for (serv in songlist.serviceDomains) {
                     if (songlist.serviceDomains.hasOwnProperty(serv)) {
                         if (songlist.serviceDomains[serv].indexOf(domain) != -1) {
-                            return domain;
+                            return serv;
                         }
                     }
                 }
@@ -46,7 +48,7 @@
             
             getURL: function(url) {
                 var xmlhttp = new XMLHttpRequest();
-                xmlhttp.open("GET", url, true);
+                xmlhttp.open("GET", url, false);
                 xmlhttp.send();
                 return xmlhttp.responseText;
             },
@@ -59,55 +61,74 @@
                 return queries.join('+');
             },
             
-            getSCPlayableURL: function(url) {
-                return SC.get('/resolve/?url=' + url).uri;
-            }
-            
             loadSCPlayer: function(url) {
-                scUrl = songlist.getSCPlayableURL(url);
-                scWidget = songlist.players.soundcloud;
-                if (scWidget) {
-                    scWidget.load(scUrl);
-                } else {
-                    iframe = document.createElement('iframe');
+                SC.get('/resolve/?url=' + url,
+                        songlist.loadSCPlayerFromValidURL);
+            },
+            
+            loadSCPlayerFromValidURL: function(response, error) {
+                var scUrl = response.uri;
+                console.log(scUrl);
+                var scWidget = songlist.players.soundcloud;
+                if (!scWidget) {
+                    var iframe = document.createElement('iframe');
+                    iframe.width = '100%';
+                    iframe.src = 'http://w.soundcloud.com/player?url=' + scUrl;
                     document.getElementById('player').appendChild(iframe);
-                    scWidget = SC.Widget(iframe);
+                    var scWidget = SC.Widget(iframe);
                     songlist.players.soundcloud = scWidget;
+                } else {
+                    scWidget.load(scUrl);
                 }
-                scWidget.play();
+                // NOTE: not sure if this bind to READY is effective to call play() if the
+                // widget is already ready by the time it is called.
+                scWidget.bind(SC.Widget.Events.READY, function() { scWidget.play() });
+                scWidget.bind(SC.Widget.Events.FINISH, function() { songlist.next() });
             },
             
             getPlaylist: function(services, submitters) {
-                if (songlist.baseURL.slice(-1) == '/') {
-                    var url = songlist.baseURL + 'search?format=json';
-                } else {
-                    var url = songlist.baseURL + '/search?format=json';
+                var url = songlist.baseURL;
+                if (songlist.baseURL.slice(-1) != '/') {
+                    url += '/';
                 }
+                url += 'search?format=json&target=songs';
                 if (services.length) {
                     var domains = new Array();
                     for (var i = 0; i < services.length; i++) {
-                        domains.concat(songlist.domains[services[i]]);
+                        domains.push.apply(domains, songlist.serviceDomains[services[i]]);
                     }
-                    url += '&domains=' + domains.join(';');
+                    url += '&domain=' + domains.join(';');
                 }
                 if (submitters.length) {
-                    url += '&submitters=' + submitters.join(';');
+                    url += '&submitter=' + submitters.join(';');
                 }
                 var playlist = songlist.getURL(url);
-                return playlist;
+                return JSON.parse(playlist);
             },
             
-            playSong: function(song) {
+            loadSong: function(song) {
                 var service = songlist.getService(song.domain);
                 if (service == 'soundcloud') {
                     songlist.loadSCPlayer(song.url);
                 }
+            },
+
+            loadCurrentSong: function() {
+                songlist.loadSong(songlist.playlist[songlist.playing]);
             },
             
             load: function() {
                 var services = songlist.getChecked('services');
                 var submitters = songlist.getChecked('submitters');
                 var playlist = songlist.getPlaylist(services, submitters);
+                songlist.playlist = playlist;
+                songlist.playing = 0; // index of currently playing song
+                songlist.loadCurrentSong();
+            },
+
+            next: function() {
+                songlist.playing++;
+                songlist.loadSong(songlist.playlist[songlist.playing]);
             }
         
         }
@@ -131,13 +152,15 @@
             <input type="checkbox" name="services" value="soundcloud" checked> Soundcloud
         </tr>
         <tr>
-            <button onclick="playlist.load()">Load</button>
+            <h2>Controls</h2>
+            <button onclick="songlist.load()">Load</button>
             <button onclick="playlist.play()">Play</button>
             <button onclick="playlist.stop()">Stop</button>
             <button onclick="playlist.prev()">Prev</button>
-            <button onclick="playlist.next()">Next</button>
+            <button onclick="songlist.next()">Next</button>
         </tr>
         <tr id="player">
+            <h2>Player</h2>
             <!--player to be inserted here by javascript-->
         </tr>
     

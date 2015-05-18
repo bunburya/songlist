@@ -20,7 +20,10 @@ def get_songs(songlist, **kwargs):
     for song in songlist:
         match = True
         for c in kwargs:
-            if not song[c] in kwargs[c]:
+            # the first part of this condition basically just means
+            # that if the user specifies a nonsense argument (like
+            # "&blahblah=foobar") the program will just ignore it
+            if c in song and not song[c] in kwargs[c]:
                 match = False
                 break
         if match:

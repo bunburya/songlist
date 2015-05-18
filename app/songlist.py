@@ -93,7 +93,7 @@ def search():
     else:
         return '0'
 
-@app.route('/play')
+@app.route('/songlist/play')
 def play():
-    submitters = get_data(songlist, 'submitter')
+    submitters = get_data(songlist, 'submitter')['submitter']
     return render_template('play.html', submitters=submitters)
