@@ -8,12 +8,23 @@
     <link rel="stylesheet" type="text/css" href="/songlist/style.css">
     <script src="http://connect.soundcloud.com/sdk.js"></script>
     <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script language="javascript">
+        
+        // initialise soundcloud API with client ID
         SC.initialize({ client_id: "77e325396300c9b6d63be0cbc005bb72" });
+        
+        function onYouTubeIframeAPIReady () {
+            // the YT API docs say we need to implement this function,
+            // but we don't actually want to do anything at this stage.
+            return false;
+        }
 
         var songlist = {
             
             baseURL: 'http://bunburya.eu/songlist',
+            
+            visibleIframe: null,
             
             serviceDomains: {
                 'youtube':      ['youtube.com', 'www.youtube.com',
@@ -61,30 +72,89 @@
                 return queries.join('+');
             },
             
-            loadSCPlayer: function(url) {
-                SC.get('/resolve/?url=' + url,
+            loadSCPlayer: function(song) {
+                SC.get('/resolve/?url=' + song.url,
                         songlist.loadSCPlayerFromValidURL);
             },
             
             loadSCPlayerFromValidURL: function(response, error) {
                 var scUrl = response.uri;
-                console.log(scUrl);
-                var scWidget = songlist.players.soundcloud;
-                if (!scWidget) {
+                if (!songlist.players.soundcloud) {
+                    // create soundcloud iframe / widget
+                    if (songlist.visibleIframe) {
+                        // if another player is showing, hide it.
+                        songlist.visibleIframe.hidden = true;
+                        songlist.visibleIframe = null;
+                    }
                     var iframe = document.createElement('iframe');
                     iframe.width = '100%';
                     iframe.src = 'http://w.soundcloud.com/player?url=' + scUrl;
                     document.getElementById('player').appendChild(iframe);
                     var scWidget = SC.Widget(iframe);
-                    songlist.players.soundcloud = scWidget;
+                    songlist.players.soundcloud = {
+                        widget: scWidget,
+                        iframe: iframe
+                    };
                 } else {
+                    var scWidget = songlist.players.soundcloud.widget;
+                    var iframe = songlist.players.soundcloud.iframe;
+                    if (songlist.visibleIframe != iframe) {
+                        songlist.visibleIframe.hidden = true;
+                        songlist.visibleIframe = null;
+                    }
                     scWidget.load(scUrl);
+                    if (iframe.hidden) {
+                        iframe.hidden = false;
+                    }
                 }
+                songlist.visibleIframe = scWidget;
                 // NOTE: not sure if this bind to READY is effective to call play() if the
                 // widget is already ready by the time it is called.
                 scWidget.bind(SC.Widget.Events.READY, function() { scWidget.play() });
                 scWidget.bind(SC.Widget.Events.FINISH, function() { songlist.next() });
             },
+            
+            loadYTPlayer: function(song) {
+                var re = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                var id = song.url.match(re).pop();
+                if (songlist.players.youtube) {
+                    if (songlist.visibleIframe != iframe) {
+                        songlist.visibleIframe.hidden = true;
+                        songlist.visibleIframe = null;
+                    }
+                    var iframe = songlist.players.youtube.iframe;
+                    var ytWidget = songlist.players.youtube.widget;
+                    ytWidget.loadVideoById(id);
+                } else {
+                    // create YouTube player iframe / widget
+                    if (songlist.visibleIframe) {
+                        // if another player is showing, hide it.
+                        songlist.visibleIframe.hidden = true;
+                        songlist.visibleIframe = null;
+                    }
+                    var url = 'http://www.youtube.com/embed/' + url + '?enablejsapi=1&origin=http://bunburya.eu';
+                    var iframe = document.createElement('iframe');
+                    iframe.src = url;
+                    iframe.width = '640';
+                    iframe.height = '390';
+                    document.getElementById('player').appendChild(iframe);
+                    var ytWidget = YT.Player(iframe, {
+                        events: {
+                            'onReady': function(event) {
+                                event.target.playVideo();
+                            }
+                        }
+                    });
+                    songlist.players.youtube = {
+                        widget: ytWidget,
+                        iframe: iframe
+                    }; 
+                }
+                if (iframe.hidden) {
+                        iframe.hidden = false;
+                }
+            },
+
             
             getPlaylist: function(services, submitters) {
                 var url = songlist.baseURL;
@@ -109,7 +179,9 @@
             loadSong: function(song) {
                 var service = songlist.getService(song.domain);
                 if (service == 'soundcloud') {
-                    songlist.loadSCPlayer(song.url);
+                    songlist.loadSCPlayer(song);
+                } else if (service == 'youtube') {
+                    songlist.loadYTPlayer(song);
                 }
             },
 
