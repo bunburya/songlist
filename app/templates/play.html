@@ -14,14 +14,29 @@
         // initialise soundcloud API with client ID
         SC.initialize({ client_id: "77e325396300c9b6d63be0cbc005bb72" });
         
+        var ytWidget;
+        var ytIframe;
         function onYouTubeIframeAPIReady () {
-            // the YT API docs say we need to implement this function,
-            // but we don't actually want to do anything at this stage.
-            return false;
+            // it would appear the YT player has to be defined in this function.
+            // TODO: move this function below songlist module, and when songlist
+            // module is moved to external script, keep this function here.
+            // this is to avoid race conditions.
+            ytWidget = new YT.Player('yt_player', {
+                height: '390',
+                width: '640',
+            });
+            ytIframe = ytWidget.c;
+            ytIframe.hidden = true;
+            if (songlist) {
+                songlist.players.youtube = {
+                    widget: ytWidget,
+                    iframe: ytIframe
+                }
+            }
         }
 
         var songlist = {
-            
+
             baseURL: 'http://bunburya.eu/songlist',
             
             visibleIframe: null,
@@ -89,7 +104,8 @@
                     var iframe = document.createElement('iframe');
                     iframe.width = '100%';
                     iframe.src = 'http://w.soundcloud.com/player?url=' + scUrl;
-                    document.getElementById('player').appendChild(iframe);
+                    document.getElementById('sc_player').appendChild(iframe);
+                    console.log('about to create SC widget');
                     var scWidget = SC.Widget(iframe);
                     songlist.players.soundcloud = {
                         widget: scWidget,
@@ -107,7 +123,7 @@
                         iframe.hidden = false;
                     }
                 }
-                songlist.visibleIframe = scWidget;
+                songlist.visibleIframe = iframe;
                 // NOTE: not sure if this bind to READY is effective to call play() if the
                 // widget is already ready by the time it is called.
                 scWidget.bind(SC.Widget.Events.READY, function() { scWidget.play() });
@@ -115,41 +131,16 @@
             },
             
             loadYTPlayer: function(song) {
+                var iframe = songlist.players.youtube.iframe;
+                var ytWidget = songlist.players.youtube.widget;
                 var re = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 var id = song.url.match(re).pop();
-                if (songlist.players.youtube) {
-                    if (songlist.visibleIframe != iframe) {
-                        songlist.visibleIframe.hidden = true;
-                        songlist.visibleIframe = null;
-                    }
-                    var iframe = songlist.players.youtube.iframe;
-                    var ytWidget = songlist.players.youtube.widget;
-                    ytWidget.loadVideoById(id);
-                } else {
-                    // create YouTube player iframe / widget
-                    if (songlist.visibleIframe) {
-                        // if another player is showing, hide it.
-                        songlist.visibleIframe.hidden = true;
-                        songlist.visibleIframe = null;
-                    }
-                    var url = 'http://www.youtube.com/embed/' + url + '?enablejsapi=1&origin=http://bunburya.eu';
-                    var iframe = document.createElement('iframe');
-                    iframe.src = url;
-                    iframe.width = '640';
-                    iframe.height = '390';
-                    document.getElementById('player').appendChild(iframe);
-                    var ytWidget = YT.Player(iframe, {
-                        events: {
-                            'onReady': function(event) {
-                                event.target.playVideo();
-                            }
-                        }
-                    });
-                    songlist.players.youtube = {
-                        widget: ytWidget,
-                        iframe: iframe
-                    }; 
+                console.log(ytWidget);
+                if (songlist.visibleIframe && songlist.visibleIframe != iframe) {
+                    songlist.visibleIframe.hidden = true;
+                    songlist.visibleIframe = null;
                 }
+                ytWidget.loadVideoById(id);
                 if (iframe.hidden) {
                         iframe.hidden = false;
                 }
@@ -233,7 +224,8 @@
         </tr>
         <tr id="player">
             <h2>Player</h2>
-            <!--player to be inserted here by javascript-->
+            <div id="yt_player"><!--youtube player to go here--></div>
+            <div id="sc_player"><!--soundcloud player to go here--></div>
         </tr>
     
     </table>
