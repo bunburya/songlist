@@ -24,13 +24,21 @@
             ytWidget = new YT.Player('yt_player', {
                 height: '390',
                 width: '640',
+                events: {
+                    'onStateChange': function(event) {
+                        if (event.data == 0) {
+                            songlist.next();
+                        }
+                    }
+                }
             });
             ytIframe = ytWidget.c;
             ytIframe.hidden = true;
             if (songlist) {
                 songlist.players.youtube = {
                     widget: ytWidget,
-                    iframe: ytIframe
+                    iframe: ytIframe,
+                    service: 'youtube'
                 }
             }
         }
@@ -39,8 +47,6 @@
 
             baseURL: 'http://bunburya.eu/songlist',
             
-            visibleIframe: null,
-            
             serviceDomains: {
                 'youtube':      ['youtube.com', 'www.youtube.com',
                                 'youtu.be', 'www.youtu.be'],
@@ -48,7 +54,9 @@
             },
             
             players: {},
-            
+
+            activePlayer: null,
+
             getService: function(domain) {
                 for (serv in songlist.serviceDomains) {
                     if (songlist.serviceDomains.hasOwnProperty(serv)) {
@@ -96,10 +104,10 @@
                 var scUrl = response.uri;
                 if (!songlist.players.soundcloud) {
                     // create soundcloud iframe / widget
-                    if (songlist.visibleIframe) {
+                    if (songlist.activePlayer) {
                         // if another player is showing, hide it.
-                        songlist.visibleIframe.hidden = true;
-                        songlist.visibleIframe = null;
+                        songlist.activePlayer.iframe.hidden = true;
+                        songlist.activePlayer = null;
                     }
                     var iframe = document.createElement('iframe');
                     iframe.width = '100%';
@@ -109,21 +117,22 @@
                     var scWidget = SC.Widget(iframe);
                     songlist.players.soundcloud = {
                         widget: scWidget,
-                        iframe: iframe
+                        iframe: iframe,
+                        service: 'soundcloud'
                     };
                 } else {
                     var scWidget = songlist.players.soundcloud.widget;
                     var iframe = songlist.players.soundcloud.iframe;
-                    if (songlist.visibleIframe != iframe) {
-                        songlist.visibleIframe.hidden = true;
-                        songlist.visibleIframe = null;
+                    if (songlist.activePlayer && songlist.activePlayer.service != 'soundcloud') {
+                        songlist.activePlayer.iframe.hidden = true;
+                        songlist.activePlayer = null;
                     }
                     scWidget.load(scUrl);
                     if (iframe.hidden) {
                         iframe.hidden = false;
                     }
                 }
-                songlist.visibleIframe = iframe;
+                songlist.activePlayer = songlist.players.soundcloud;
                 // NOTE: not sure if this bind to READY is effective to call play() if the
                 // widget is already ready by the time it is called.
                 scWidget.bind(SC.Widget.Events.READY, function() { scWidget.play() });
@@ -136,14 +145,15 @@
                 var re = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 var id = song.url.match(re).pop();
                 console.log(ytWidget);
-                if (songlist.visibleIframe && songlist.visibleIframe != iframe) {
-                    songlist.visibleIframe.hidden = true;
-                    songlist.visibleIframe = null;
+                if (songlist.activePlayer && songlist.activePlayer.service != 'youtube') {
+                    songlist.activePlayer.iframe.hidden = true;
+                    songlist.activePlayer = null;
                 }
                 ytWidget.loadVideoById(id);
                 if (iframe.hidden) {
                         iframe.hidden = false;
                 }
+                songlist.activePlayer = songlist.players.youtube;
             },
 
             
@@ -169,6 +179,7 @@
             
             loadSong: function(song) {
                 var service = songlist.getService(song.domain);
+                songlist.stop();
                 if (service == 'soundcloud') {
                     songlist.loadSCPlayer(song);
                 } else if (service == 'youtube') {
@@ -179,6 +190,20 @@
             loadCurrentSong: function() {
                 songlist.loadSong(songlist.playlist[songlist.playing]);
             },
+
+            stop: function() {
+                if (!songlist.activePlayer) { 
+                    console.log('no active player');
+                    return;
+                }
+                if (songlist.activePlayer.service == 'youtube') {
+                    songlist.players.youtube.widget.stopVideo();
+                } else if (songlist.activePlayer.service == 'soundcloud') {
+                    console.log('stopping soundcloud');
+                    songlist.players.soundcloud.widget.pause();
+                }
+            },
+
             
             load: function() {
                 var services = songlist.getChecked('services');
@@ -190,7 +215,15 @@
             },
 
             next: function() {
+                // TODO: handle case where next() is called on last song
                 songlist.playing++;
+                songlist.loadSong(songlist.playlist[songlist.playing]);
+            },
+
+            prev: function() {
+                if (songlist.playing > 0) {
+                    songlist.playing--;
+                }
                 songlist.loadSong(songlist.playlist[songlist.playing]);
             }
         
@@ -217,9 +250,9 @@
         <tr>
             <h2>Controls</h2>
             <button onclick="songlist.load()">Load</button>
-            <button onclick="playlist.play()">Play</button>
-            <button onclick="playlist.stop()">Stop</button>
-            <button onclick="playlist.prev()">Prev</button>
+            <button onclick="songlist.loadCurrentSong()">Play</button>
+            <button onclick="songlist.stop()">Stop</button>
+            <button onclick="songlist.prev()">Prev</button>
             <button onclick="songlist.next()">Next</button>
         </tr>
         <tr id="player">
