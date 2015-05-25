@@ -6,9 +6,12 @@
   - JavaScript web page that queries API for song data, sorts it by service,
     and embeds player as appropriate.
 
-  - Should have shuffle / repeat all as well as striaghtforward play capabilities.
+  - Should have shuffle / repeat all as well as straightforward play capabilities.
 
   - Should have ability to select which services and which submitters to show.
+
+  - CURRENTLY WORKING ON: getNext / getPrev functions, show Prev / Now / Next,
+    show playlist
 
 - Find a way to get debugging working with uwsgi, or replicate the app on
   laptop without nginx / uwsgi.
